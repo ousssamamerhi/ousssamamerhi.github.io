@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NPA IM Migration System</title>
+<meta name="robots" content="noindex">
+<script src="config.js"></script>
+<style>
+:root{--green:#007846;--green-d:#00552F;--green-l:#DBEBD7;--line:#B4D7AD;--ink:#16232A;--muted:#4D5B61;--bg:#F6FAF5;--card:#FFFFFF;--red:#B00015;--field:#FFFFFF;--fline:#9BB5A4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--green:#3FB27F;--green-d:#7FD3A9;--green-l:#173A2A;--line:#2D5A43;--ink:#E8EFEA;--muted:#A9B8AF;--bg:#0F1A15;--card:#16241D;--red:#FF8A95;--field:#0F1A15;--fline:#3E6A53}}
+:root[data-theme="dark"]{--green:#3FB27F;--green-d:#7FD3A9;--green-l:#173A2A;--line:#2D5A43;--ink:#E8EFEA;--muted:#A9B8AF;--bg:#0F1A15;--card:#16241D;--red:#FF8A95;--field:#0F1A15;--fline:#3E6A53}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:980px;margin:0 auto;padding:48px 16px 64px}
+.kick{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.1;margin:8px 0 12px;letter-spacing:-.01em}
+.lead{color:var(--muted);font-size:18px;max-width:720px;margin:0 0 32px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:26px}
+.card h2{margin:0 0 8px;font-size:22px}
+.card p{margin:0 0 18px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:12px;border:2px solid var(--green);background:var(--green);color:#fff;font:600 16px system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.btn:hover{background:var(--green-d);border-color:var(--green-d)}
+.btn.ghost{background:transparent;color:var(--green)}
+.btn.ghost:hover{background:var(--green-l)}
+.btn[disabled]{opacity:.55;cursor:default}
+.linkbtn{background:none;border:0;padding:0;color:var(--green);font:inherit;text-decoration:underline;cursor:pointer;min-height:44px}
+form{display:grid;gap:12px}
+label{display:grid;gap:4px;font-size:14px;font-weight:600}
+input[type=email],input[type=password]{font:inherit;padding:10px 12px;min-height:44px;border-radius:10px;border:1.5px solid var(--fline);background:var(--field);color:var(--ink);width:100%}
+input:focus-visible,.btn:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.msg{font-size:14px;min-height:20px}
+.err{color:var(--red);font-weight:600}
+.okm{color:var(--green);font-weight:600}
+.steps{margin:36px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.steps li{display:flex;gap:12px;align-items:flex-start;color:var(--muted)}
+.steps b.n{flex:none;width:28px;height:28px;border-radius:8px;background:var(--green);color:#fff;display:grid;place-items:center;font-size:14px}
+.small{font-size:14px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+[hidden]{display:none!important}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <div class="kick">Norwegian People's Aid · Information Management</div>
+  <h1 id="site-title">NPA IM Migration System</h1>
+  <p class="lead">Moves records between ArcGIS feature layers, in ArcGIS Online or Enterprise, with every field, photo and related record. Access is for approved organisations only.</p>
+
+  <section id="v-out" hidden>
+    <div class="grid">
+      <div class="card">
+        <h2>New organisation?</h2>
+        <p>Fill in the request form. Once it is approved, you receive an email with your username and a temporary password.</p>
+        <a class="btn" id="btn-request" href="#" target="_blank" rel="noopener">Request access</a>
+        <p class="small" id="no-form" hidden style="margin-top:12px">The request form is not set up yet. Please contact the IM team.</p>
+      </div>
+      <div class="card">
+        <h2 id="login-title">Sign in</h2>
+        <form id="f-login" novalidate>
+          <label>Email (your username)<input type="email" id="in-email" autocomplete="username" required></label>
+          <label>Password<input type="password" id="in-pass" autocomplete="current-password" required></label>
+          <div id="new-pass-box" hidden style="display:grid;gap:12px">
+            <label>New password (at least 10 characters)<input type="password" id="in-new" autocomplete="new-password" minlength="10"></label>
+            <label>New password again<input type="password" id="in-new2" autocomplete="new-password" minlength="10"></label>
+          </div>
+          <div class="row"><button type="submit" class="btn" id="btn-login">Sign in</button><button type="button" class="linkbtn" id="btn-toggle-change">Change my password</button></div>
+          <div class="msg" id="login-msg" role="status" aria-live="polite"></div>
+          <div class="small" id="forgot">Forgot your password? Contact the IM team<span id="contact"></span>.</div>
+        </form>
+      </div>
+    </div>
+    <ol class="steps">
+      <li><b class="n">1</b><span>Request access with the form.</span></li>
+      <li><b class="n">2</b><span>The IM team reviews the request and creates your account.</span></li>
+      <li><b class="n">3</b><span>You receive your username and a temporary password by email. Change the password the first time you sign in.</span></li>
+      <li><b class="n">4</b><span>Sign in here. In the system, sign in to your own ArcGIS (Online or Enterprise) to reach your layers.</span></li>
+    </ol>
+  </section>
+
+  <section id="v-reset" hidden><div class="card" style="max-width:520px">
+    <h2>Choose a new password</h2>
+    <p class="small" id="reset-for"></p>
+    <form id="f-reset" novalidate>
+      <label>New password (at least 10 characters)<input type="password" id="rs-new" autocomplete="new-password" minlength="10"></label>
+      <label>New password again<input type="password" id="rs-new2" autocomplete="new-password" minlength="10"></label>
+      <div class="row"><button type="submit" class="btn" id="btn-reset">Save and sign in</button><button type="button" class="linkbtn" data-signout>Cancel</button></div>
+      <div class="msg" id="reset-msg" role="status" aria-live="polite"></div>
+    </form>
+  </div></section>
+
+  <section id="v-busy" hidden><div class="card"><h2 id="busy-title">Opening the system…</h2><p class="small" id="busy-text">This takes a moment.</p></div></section>
+
+  <section id="v-error" hidden><div class="card"><h2>Something went wrong</h2><p id="error-text"></p><div class="row"><button type="button" class="btn" id="btn-retry">Try again</button><button type="button" class="btn ghost" data-signout>Sign out</button></div></div></section>
+
+  <footer>Your data stays in ArcGIS: inside the system you still sign in to your own ArcGIS account to reach your layers.</footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var CFG = window.FM_CONFIG || {};
+  var SB = String(CFG.supabaseUrl || "").replace(/\/+$/, ""), KEYPUB = CFG.supabaseKey || "";
+  var BUCKET = CFG.codeBucket || "app", FILE = CFG.codeFile || "index.html", KEY = "imm_gate";
+  var $ = function (id) { return document.getElementById(id); };
+  var VIEWS = ["v-out", "v-reset", "v-busy", "v-error"];
+  function show(v) { VIEWS.forEach(function (x) { $(x).hidden = x !== v; }); }
+  function fail(msg) { $("error-text").textContent = msg; show("v-error"); }
+  function say(msg, cls) { var m = $("login-msg"); if (!m) return; m.className = "msg " + (cls || ""); m.textContent = msg; }
+  if (CFG.siteTitle) { $("site-title").textContent = CFG.siteTitle; document.title = CFG.siteTitle; }
+  if (CFG.requestFormUrl) $("btn-request").href = CFG.requestFormUrl; else { $("btn-request").hidden = true; $("no-form").hidden = false; }
+  if (CFG.contactEmail) { var a = document.createElement("a"); a.href = "mailto:" + CFG.contactEmail; a.textContent = CFG.contactEmail; $("contact").append(" (", a, ")"); }
+
+  // ---------- session: this browser tab only
+  function load() { try { var g = JSON.parse(sessionStorage.getItem(KEY) || "null"); return g && g.access && g.sb === SB ? g : null; } catch (e) { return null; } }
+  function save(g) { try { sessionStorage.setItem(KEY, JSON.stringify(g)); } catch (e) {} }
+  function clear() { try { sessionStorage.removeItem(KEY); } catch (e) {} }
+  function signOut() {
+    var g = load(); clear();
+    if (g) fetch(SB + "/auth/v1/logout", {method: "POST", headers: {apikey: KEYPUB, Authorization: "Bearer " + g.access}}).catch(function () {});
+    location.href = location.pathname;
+  }
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-signout]")) signOut(); });
+  $("btn-retry").onclick = function () { location.reload(); };
+
+  // ---------- Supabase Auth and Storage (plain requests, no library)
+  function auth(path, body, token) {
+    // the publishable key goes only in the apikey header; Authorization carries a signed-in user's token, never the key
+    var h = {"Content-Type": "application/json", apikey: KEYPUB}; if (token) h.Authorization = "Bearer " + token;
+    return fetch(SB + "/auth/v1/" + path, {method: path === "user" ? "PUT" : "POST", headers: h, body: JSON.stringify(body)})
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) { var e = new Error(j.error_description || j.msg || j.message || ("Error " + r.status)); e.status = r.status; e.code = j.error_code || j.error; throw e; } return j; }); });
+  }
+  function session(j) { return {access: j.access_token, refresh: j.refresh_token, expires: Date.now() + (j.expires_in || 3600) * 1000, email: (j.user && j.user.email) || "", sb: SB}; }
+  function fresh(g) {
+    if (g.expires > Date.now() + 60000) return Promise.resolve(g);
+    return auth("token?grant_type=refresh_token", {refresh_token: g.refresh}).then(function (j) { var n = session(j); save(n); return n; });
+  }
+  function getCode(g) {
+    return fetch(SB + "/storage/v1/object/authenticated/" + encodeURIComponent(BUCKET) + "/" + FILE.split("/").map(encodeURIComponent).join("/"), {headers: {apikey: KEYPUB, Authorization: "Bearer " + g.access}})
+      .then(function (r) {
+        if (r.status === 400 || r.status === 401 || r.status === 403 || r.status === 404) { var e = new Error("nocode"); e.status = r.status; throw e; }
+        if (!r.ok) throw new Error("The system could not be loaded (error " + r.status + ").");
+        return r.text();
+      });
+  }
+
+  function openSystem(g) {
+    $("busy-title").textContent = "Opening the system…"; show("v-busy");
+    return fresh(g).then(getCode).then(function (html) {
+      if (!/<html[\s>]/i.test(html)) throw new Error("The stored system file is not a web page. Please contact the IM team.");
+      window.FM_GATE = {via: "accounts", email: g.email};
+      document.open(); document.write(html); document.close();
+    }).catch(function (e) {
+      if (e.message === "nocode") { fail("You are signed in as " + g.email + ", but the system could not be opened for this account. Please contact the IM team."); return; }
+      if (e.status === 400 || e.status === 401) { clear(); show("v-out"); say("Your session has ended. Please sign in again.", "err"); return; }
+      fail(e.message);
+    });
+  }
+
+  // ---------- sign in (and optionally change the password first)
+  var changing = false;
+  $("btn-toggle-change").onclick = function () {
+    changing = !changing; $("new-pass-box").hidden = !changing;
+    this.textContent = changing ? "Just sign in" : "Change my password";
+    $("btn-login").textContent = changing ? "Change password and sign in" : "Sign in";
+    $("login-title").textContent = changing ? "Change your password" : "Sign in"; say("");
+  };
+  $("f-login").addEventListener("submit", function (ev) {
+    ev.preventDefault(); say("");
+    var email = $("in-email").value.trim(), pass = $("in-pass").value;
+    if (!SB || !KEYPUB) { say("config.js has no supabaseUrl or supabaseKey yet.", "err"); return; }
+    if (!email || !pass) { say("Enter your email and password.", "err"); return; }
+    if (changing) {
+      if ($("in-new").value.length < 10) { say("The new password needs at least 10 characters.", "err"); return; }
+      if ($("in-new").value !== $("in-new2").value) { say("The two new passwords are not the same.", "err"); return; }
+      if ($("in-new").value === pass) { say("Choose a new password different from the current one.", "err"); return; }
+    }
+    $("btn-login").disabled = true; say("Signing in…");
+    auth("token?grant_type=password", {email: email, password: pass}).then(function (j) {
+      var g = session(j); save(g);
+      if (!changing) return g;
+      say("Changing your password…");
+      return auth("user", {password: $("in-new").value}, g.access).then(function () { say("✔ Password changed.", "okm"); return g; });
+    }).then(function (g) { $("in-pass").value = ""; $("in-new").value = ""; $("in-new2").value = ""; return openSystem(g); })
+      .catch(function (e) {
+        clear();
+        var m = /invalid/i.test(e.message) || e.code === "invalid_credentials" ? "The email or password is not correct." : (e.status === 429 ? "Too many attempts. Please wait a few minutes and try again." : e.message);
+        say(m, "err");
+      }).then(function () { var b = $("btn-login"); if (b) b.disabled = false; });
+  });
+
+  // ---------- links from Supabase emails (reset password, invite): #access_token=…&type=recovery
+  function fromLink() {
+    var h = location.hash.replace(/^#/, ""); if (!/access_token=|error=|error_code=/.test(h)) return null;
+    var p = {}; h.split("&").forEach(function (kv) { var i = kv.indexOf("="); if (i > 0) p[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1).replace(/\+/g, " ")); });
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }  // take the token out of the address bar
+    return p;
+  }
+  function emailOf(token) { try { return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).email || ""; } catch (e) { return ""; } }
+  var link = fromLink(), rg = null;
+  if (link && (link.error || link.error_code)) {
+    show("v-out");
+    say(/expired|otp/i.test((link.error_code || "") + (link.error_description || "")) ? "This link has expired or was already used. Please ask the IM team for a new one." : "The link could not be used: " + (link.error_description || link.error), "err");
+  } else if (link && link.access_token && /recovery|invite|signup|magiclink/.test(link.type || "")) {
+    rg = {access: link.access_token, refresh: link.refresh_token, expires: Date.now() + (+link.expires_in || 3600) * 1000, email: emailOf(link.access_token), sb: SB};
+    $("reset-for").textContent = rg.email ? "For " + rg.email + "." : "";
+    show("v-reset"); $("rs-new").focus();
+  } else {
+    var g = load();
+    if (g) openSystem(g); else show("v-out");
+  }
+  $("f-reset").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var m = $("reset-msg"), a = $("rs-new").value;
+    function rsay(t, c) { m.className = "msg " + (c || ""); m.textContent = t; }
+    if (a.length < 10) { rsay("The new password needs at least 10 characters.", "err"); return; }
+    if (a !== $("rs-new2").value) { rsay("The two passwords are not the same.", "err"); return; }
+    $("btn-reset").disabled = true; rsay("Saving…");
+    auth("user", {password: a}, rg.access).then(function () {
+      save(rg); $("rs-new").value = ""; $("rs-new2").value = ""; rsay("✔ Password saved.", "okm"); return openSystem(rg);
+    }).catch(function (e) {
+      rsay(e.status === 401 || e.status === 403 ? "This link has expired. Please ask the IM team for a new one." : (/same|different/i.test(e.message) ? "Choose a password different from your old one." : e.message), "err");
+    }).then(function () { var b = $("btn-reset"); if (b) b.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>
