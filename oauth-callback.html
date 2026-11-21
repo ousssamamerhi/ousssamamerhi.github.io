@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Signing in…</title>
+<script>
+// Finishes the ArcGIS sign-in window (ArcGIS Maps SDK for JavaScript 4.x) and closes it.
+function finish() {
+  if (window.opener) {
+    if (location.hash) {
+      if (typeof opener.require === "function" && opener.require("esri/kernel")) opener.require("esri/kernel").id.setOAuthResponseHash(location.hash);
+      else opener.dispatchEvent(new CustomEvent("arcgis:auth:hash", {detail: location.hash}));
+    } else if (location.search) {
+      opener.dispatchEvent(new CustomEvent("arcgis:auth:location:search", {detail: location.search}));
+    }
+  }
+  window.close();
+}
+</script>
+</head>
+<body onload="finish()"><p>Signing in…</p></body>
+</html>
