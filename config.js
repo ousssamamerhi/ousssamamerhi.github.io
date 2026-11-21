@@ -5,5 +5,5 @@ window.FM_CONFIG = {
   supabaseUrl: "https://kkncifjsbsikwofjypyd.supabase.co",               // e.g. https://xxxx.supabase.co (Phase 1)
   supabaseKey: "sb_publishable_sKcLG91mcB05pJOXkHOyLQ_nSy-YY-L",   // starts with sb_publishable_ (never the secret key)
   requestFormUrl: "https://arcg.is/1j14nm5",                             // the Survey123 form link (Phase 5)
-  contactEmail: "ousssamamerhi@gmail.com"                                // shown under "Forgot your password?"
+  contactEmail: "ousmer967@npaid.org"                                // shown under "Forgot your password?"
 };
